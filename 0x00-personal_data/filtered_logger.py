@@ -9,19 +9,16 @@ import mysql.connector
 
 PII_FIELDS = ("name", "email", "phone", "ssn", "password")
 
-
 def filter_datum(fields: List[str], redaction: str,
                  message: str, separator: str) -> str:
     """Filter datum for user data management"""
-    for data in fields:
-        message = re.sub(r"{}=(.*?)(?={})".format(data, separator),
-                         data + "=" + redaction, message)
+    for field in fields:
+        message = re.sub(r"{}=.*?{}".format(field, separator),
+                         "{}={}{}".format(field, redaction, separator), message)
     return message
 
-
 class RedactingFormatter(logging.Formatter):
-    """ Redacting Formatter class
-        """
+    """ Redacting Formatter class """
 
     REDACTION = "***"
     FORMAT = "[HOLBERTON] %(name)s %(levelname)s %(asctime)-15s: %(message)s"
@@ -29,14 +26,17 @@ class RedactingFormatter(logging.Formatter):
 
     def __init__(self, fields: Tuple[str]):
         super(RedactingFormatter, self).__init__(self.FORMAT)
-        self.fields: Tuple[str] = fields
+        self.fields = fields
 
     def format(self, record: logging.LogRecord) -> str:
-        """user format NotImplementedError"""
-        record.msg: record.msg = filter_datum(self.fields, self.REDACTION,
-                                              record.msg, self.SEPARATOR)
-        return super().format(record)
-
+        """Filter sensitive information in log records"""
+        original_msg = record.msg
+        if isinstance(record.msg, str):
+            record.msg = filter_datum(self.fields, self.REDACTION,
+                                      record.msg, self.SEPARATOR)
+        formatted_msg = super().format(record)
+        record.msg = original_msg  # Reset to original message
+        return formatted_msg
 
 def get_logger() -> logging.Logger:
     """This function will help us get the logger"""
@@ -53,7 +53,6 @@ def get_logger() -> logging.Logger:
     logger.propagate = False
     return logger
 
-
 def get_db() -> mysql.connector.connection.MySQLConnection:
     """Get the database of the application"""
     connection = mysql.connector.connect(
@@ -63,7 +62,6 @@ def get_db() -> mysql.connector.connection.MySQLConnection:
             database=os.environ.get("PERSONAL_DATA_DB_NAME", "my_db")
             )
     return connection
-
 
 def main() -> None:
     """Main function for our python script"""
@@ -77,7 +75,6 @@ def main() -> None:
         string2 = "ip={}; last_login={}; user_agent={};"
         string = (string1 + string2).format(*row)
         logger.info(string)
-
 
 if __name__ == '__main__':
     main()
