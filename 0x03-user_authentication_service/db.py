@@ -9,6 +9,7 @@ from sqlalchemy.orm.exc import NoResultFound
 from typing import Mapping, Union, Dict
 from user import Base, User
 
+
 class DB:
     """DB class
     """
@@ -36,6 +37,3 @@ class DB:
         self.__session.add(user)
         self.__session.commit()
         return user
-
-
-    
