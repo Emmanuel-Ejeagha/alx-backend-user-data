@@ -39,3 +39,31 @@ class DB:
         self._session.add(user)
         self._session.commit()
         return user
+
+    def find_user_by(self, **kwargs) -> User:
+        """returns the first row foun in the users table"""
+        if not kwargs:
+            raise InvalidRequestError
+        for key in kwargs.keys():
+            if key not in ['id', 'email', 'hashed_password',
+                           'session_id', 'reset_token']:
+                raise InvalidRequestError
+        data = self._session.query(User).filter_by(**kwargs).first()
+        if data is None:
+            raise NoResultFound
+        elif self._session.query(User).filter_by(**kwargs).count() > 1:
+            raise InvalidRequestError
+        return data
+
+    def update_user(self, user_id: int, **kwargs) -> None:
+        """update users info"""
+        if not kwargs:
+            return None
+        user = self.find_user_by(id=user_id)
+        for key, value in kwargs.items():
+            if key not in ['id', 'email', 'hashed_password',
+                           'session_id', 'reset_token']:
+                raise ValueError
+            setattr(user, key, value)
+        self._session.commit()
+        return None
