@@ -8,7 +8,7 @@ Base = declarative_base()
 
 
 class User(Base):
-    """The user model which will be mapped to a table in sql"""
+    """The user model which will be mapped to a table in SQL"""
     __tablename__ = 'users'
     id = Column(Integer, primary_key=True)
     email = Column(String(250), nullable=False)
